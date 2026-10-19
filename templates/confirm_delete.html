@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import priority_badge, status_badge %}
+{% block title %}Delete job {{ job.id }}? – Meadow House Repairs{% endblock %}
+{% block content %}
+<section class="panel confirm-panel" aria-labelledby="confirm-heading">
+  <h1 id="confirm-heading" tabindex="-1" data-focus>Delete job {{ job.id }}?</h1>
+  <div class="badges">{{ status_badge(job.status) }} {{ priority_badge(job.priority) }}</div>
+  <p class="plain"><strong>Description:</strong> {{ job.description }}</p>
+  <p class="meta">Reported by {{ job.reporter }} · {{ job.created_at|when }}</p>
+  <p class="warning-text">This permanently removes the job, its notes and its whole history. It cannot be undone.</p>
+  <div class="button-row">
+    <form method="post" action="{{ url_for('delete_job', job_id=job.id) }}">
+      <button type="submit" class="button button-danger">Yes, delete job {{ job.id }}</button>
+    </form>
+    <a class="button button-secondary" href="{{ url_for('view_job', job_id=job.id) }}">No, keep this job</a>
+  </div>
+</section>
+{% endblock %}

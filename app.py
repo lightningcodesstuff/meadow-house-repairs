@@ -94,6 +94,17 @@ class JobStore:
                     return job
             return None
 
+    def delete(self, job_id):
+        """Remove one job. Returns True if it existed."""
+        with self.lock:
+            data = self._load()
+            remaining = [j for j in data["jobs"] if j["id"] != job_id]
+            if len(remaining) == len(data["jobs"]):
+                return False
+            data["jobs"] = remaining
+            self._save(data)
+            return True
+
 
 def _now():
     return datetime.now().isoformat(timespec="seconds")
@@ -277,6 +288,17 @@ def create_app(data_file=None):
         store.update(job_id, change)
         flash(("saved", f"Job {job_id} marked as Completed."))
         return redirect(url_for("view_job", job_id=job_id))
+
+    @app.get("/jobs/<job_id>/delete")
+    def confirm_delete(job_id):
+        return render_template("confirm_delete.html", job=load_job_or_404(job_id))
+
+    @app.post("/jobs/<job_id>/delete")
+    def delete_job(job_id):
+        load_job_or_404(job_id)
+        store.delete(job_id)
+        flash(("deleted", job_id))
+        return redirect(url_for("index") + "#deleted")
 
     @app.errorhandler(404)
     def not_found(_):

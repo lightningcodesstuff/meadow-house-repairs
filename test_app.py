@@ -159,3 +159,29 @@ def test_10_typed_text_stays_plain(client_store):
         page = client.get(url).get_data(as_text=True)
         assert "<b>check gate</b>" not in page
         assert "&lt;b&gt;check gate&lt;/b&gt;" in page
+
+
+def test_delete_asks_then_removes_only_that_job(client_store):
+    client, store = client_store
+    report(client, "Garden fence damaged", "Alex Morgan", "Urgent")
+    report(client, "Kitchen light flickering", "Jo Patel", "Normal")
+    kitchen = store.get("MH-0002")
+
+    confirm = client.get("/jobs/MH-0001/delete").get_data(as_text=True)
+    assert "Yes, delete job MH-0001" in confirm
+    assert store.get("MH-0001") is not None  # viewing the confirm page deletes nothing
+
+    res = client.post("/jobs/MH-0001/delete", follow_redirects=True)
+    assert "Job MH-0001 deleted" in res.get_data(as_text=True)
+    assert store.get("MH-0001") is None
+    assert store.get("MH-0002") == kitchen
+    assert client.get("/jobs/MH-0001").status_code == 404
+
+    # IDs are never reused after a delete.
+    report(client, "Dripping tap", "Sam Lee", "Normal")
+    assert store.get("MH-0003") is not None
+
+
+def test_delete_unknown_job_is_404(client_store):
+    client, _ = client_store
+    assert client.post("/jobs/MH-9999/delete").status_code == 404

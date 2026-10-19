@@ -94,6 +94,12 @@
         <button type="submit" class="button button-complete">Mark as Completed</button>
       </form>
     {% endif %}
+
+    <div class="action-block delete-block">
+      <h3>Delete this job</h3>
+      <p class="hint">Removes the job and its history for good. You will be asked to confirm.</p>
+      <a class="button button-danger" href="{{ url_for('confirm_delete', job_id=job.id) }}">Delete job {{ job.id }}</a>
+    </div>
   </section>
 </div>
 {% endblock %}

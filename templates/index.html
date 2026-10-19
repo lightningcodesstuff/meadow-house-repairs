@@ -13,6 +13,11 @@
       {% endif %}
       <p><a href="{{ url_for('view_job', job_id=payload) }}">Open job {{ payload }} to update it</a></p>
     </div>
+  {% elif kind == "deleted" %}
+    <div id="deleted" class="banner banner-success" role="status" tabindex="-1" data-focus>
+      <h2>Job {{ payload }} deleted</h2>
+      <p>The job and its history have been removed.</p>
+    </div>
   {% endif %}
 {% endfor %}
 

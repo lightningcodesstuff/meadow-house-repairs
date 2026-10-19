@@ -126,6 +126,14 @@ textarea { resize: vertical; min-height: 80px; }
 .button-complete { background: var(--success-text); border-color: var(--success-text); }
 .button-complete:hover { background: #0d4320; border-color: #0d4320; }
 
+.button-danger { background: var(--urgent); border-color: var(--urgent); color: #fff; }
+.button-danger:hover { background: #7d1014; border-color: #7d1014; color: #fff; }
+.button-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.button-row form { margin: 0; }
+.confirm-panel { max-width: 720px; }
+.warning-text { color: var(--error); font-weight: 700; }
+.delete-block { border-top: 1px solid #dde1e6; padding-top: 20px; margin-top: 20px; }
+
 /* Banners and errors */
 .banner, .error-summary {
   border-radius: 8px; padding: 16px 20px; margin: 0 0 24px;
