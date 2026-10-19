@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "_macros.html" import priority_badge, status_badge, error_summary %}
+{% block title %}{% if errors %}Error: {% endif %}Repair jobs – Meadow House Repairs{% endblock %}
+{% block content %}
+
+{% for kind, payload in get_flashed_messages() %}
+  {% if kind == "created" %}
+    {% set new_job = config.STORE.get(payload) %}
+    <div id="created" class="banner banner-success" role="status" tabindex="-1" data-focus>
+      <h2>Repair job {{ payload }} created</h2>
+      {% if new_job %}
+      <p>Status: New · {{ new_job.priority }} priority · Reported by {{ new_job.reporter }}</p>
+      {% endif %}
+      <p><a href="{{ url_for('view_job', job_id=payload) }}">Open job {{ payload }} to update it</a></p>
+    </div>
+  {% endif %}
+{% endfor %}
+
+<div class="layout">
+  <section class="panel" aria-labelledby="report-heading">
+    <h1 id="report-heading">Report a repair</h1>
+    <p class="hint">All fields are required. The job is created for <strong>Meadow House</strong>.</p>
+
+    {{ error_summary(errors, {"description": ("description", ""), "reporter": ("reporter", ""), "priority": ("priority-normal", "")}) }}
+
+    <form method="post" action="{{ url_for('create_job') }}" novalidate>
+      <div class="field {% if errors.description %}field-error{% endif %}">
+        <label for="description">What needs repairing?</label>
+        <p class="hint" id="description-hint">Describe the problem and where it is.</p>
+        {% if errors.description %}<p class="error-message" id="description-error"><span class="visually-hidden">Error:</span> {{ errors.description }}</p>{% endif %}
+        <textarea id="description" name="description" rows="4" maxlength="{{ max_text }}" required
+          aria-describedby="description-hint{% if errors.description %} description-error{% endif %}"
+          {% if errors.description %}aria-invalid="true"{% endif %}>{{ values.description }}</textarea>
+      </div>
+
+      <div class="field {% if errors.reporter %}field-error{% endif %}">
+        <label for="reporter">Your name (reporter)</label>
+        {% if errors.reporter %}<p class="error-message" id="reporter-error"><span class="visually-hidden">Error:</span> {{ errors.reporter }}</p>{% endif %}
+        <input id="reporter" name="reporter" type="text" maxlength="200" autocomplete="name" required
+          value="{{ values.reporter }}"
+          {% if errors.reporter %}aria-describedby="reporter-error" aria-invalid="true"{% endif %}>
+      </div>
+
+      <fieldset class="field {% if errors.priority %}field-error{% endif %}"
+        {% if errors.priority %}aria-describedby="priority-error"{% endif %}>
+        <legend>Priority</legend>
+        {% if errors.priority %}<p class="error-message" id="priority-error"><span class="visually-hidden">Error:</span> {{ errors.priority }}</p>{% endif %}
+        <div class="radios">
+          {% for p in priorities %}
+          <div class="radio">
+            <input type="radio" id="priority-{{ p|lower }}" name="priority" value="{{ p }}"
+              {% if values.priority == p %}checked{% endif %}>
+            <label for="priority-{{ p|lower }}">{{ p }}{% if p == "Urgent" %} – needs attention today{% endif %}</label>
+          </div>
+          {% endfor %}
+        </div>
+      </fieldset>
+
+      <button type="submit" class="button">Report repair</button>
+    </form>
+  </section>
+
+  <section class="panel" aria-labelledby="jobs-heading">
+    <h2 id="jobs-heading">Repair jobs</h2>
+    <nav aria-label="Filter jobs by status">
+      <ul class="filters">
+        {% for s in ("All",) + statuses %}
+          <li><a href="{{ url_for('index', status=s) if s != 'All' else url_for('index') }}"
+            {% if status_filter == s %}aria-current="page" class="current"{% endif %}>{{ s }} ({{ counts[s] }})</a></li>
+        {% endfor %}
+      </ul>
+    </nav>
+
+    {% if jobs %}
+      <ul class="job-list">
+        {% for job in jobs %}
+          <li class="job-card {% if job.priority == 'Urgent' %}is-urgent{% endif %}" id="job-{{ job.id }}">
+            <div class="job-card-head">
+              <h3><a href="{{ url_for('view_job', job_id=job.id) }}">Job {{ job.id }}<span class="visually-hidden">: {{ job.description }}</span></a></h3>
+              <div class="badges">{{ status_badge(job.status) }} {{ priority_badge(job.priority) }}</div>
+            </div>
+            <p class="job-desc">{{ job.description }}</p>
+            <p class="meta">{{ job.house }} · Reported by {{ job.reporter }} · {{ job.created_at|when }}</p>
+            {% if job.latest_note %}
+              <p class="meta"><strong>Latest note:</strong> <span class="plain">{{ job.latest_note }}</span></p>
+            {% endif %}
+            <a class="button button-secondary" href="{{ url_for('view_job', job_id=job.id) }}">View and update job {{ job.id }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% elif counts["All"] %}
+      <p>No jobs with status {{ status_filter }}. <a href="{{ url_for('index') }}">Show all jobs</a></p>
+    {% else %}
+      <p>No repairs reported yet. Use the <strong>Report a repair</strong> form to create the first job.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

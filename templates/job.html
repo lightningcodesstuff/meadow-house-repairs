@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "_macros.html" import priority_badge, status_badge, error_summary %}
+{% block title %}{% if errors %}Error: {% endif %}Job {{ job.id }} – Meadow House Repairs{% endblock %}
+{% block content %}
+
+<p><a href="{{ url_for('index') }}">← Back to all jobs and the report form</a></p>
+
+{% for kind, payload in get_flashed_messages() %}
+  {% if kind == "saved" %}
+    <div class="banner banner-success" role="status" tabindex="-1" data-focus>
+      <h2>Saved</h2>
+      <p>{{ payload }}</p>
+    </div>
+  {% endif %}
+{% endfor %}
+
+{{ error_summary(errors, {"note": ("note", ""), "completion_note": ("completion_note", ""), "start": ("start-button", "")}) }}
+
+<div class="layout">
+  <section class="panel" aria-labelledby="job-heading">
+    <h1 id="job-heading">Job {{ job.id }}</h1>
+    <div class="badges">{{ status_badge(job.status) }} {{ priority_badge(job.priority) }}</div>
+
+    <dl class="details">
+      <div><dt>Job ID</dt><dd>{{ job.id }}</dd></div>
+      <div><dt>House</dt><dd>{{ job.house }}</dd></div>
+      <div><dt>Reported</dt><dd>{{ job.created_at|when }}</dd></div>
+      <div><dt>Reporter</dt><dd class="plain">{{ job.reporter }}</dd></div>
+      <div><dt>Priority</dt><dd>{{ job.priority }}</dd></div>
+      <div><dt>Status</dt><dd>{{ job.status }}</dd></div>
+      <div><dt>Description</dt><dd class="plain">{{ job.description }}</dd></div>
+      {% if job.latest_note and job.status != "Completed" %}
+      <div><dt>Latest progress note</dt><dd class="plain">{{ job.latest_note }}</dd></div>
+      {% endif %}
+    </dl>
+
+    {% if job.status == "Completed" %}
+      <div class="completed-box">
+        <h2>Completed – what was done</h2>
+        <p class="plain">{{ job.completion_note }}</p>
+      </div>
+    {% endif %}
+
+    <h2 id="history-heading">History</h2>
+    <p class="hint">Oldest first. Every update is kept.</p>
+    <ol class="history" aria-labelledby="history-heading">
+      {% for entry in job.history %}
+        <li>
+          <p class="history-when"><time datetime="{{ entry.at }}">{{ entry.at|when }}</time></p>
+          <p><span class="badge {{ entry.status|status_class }}">{{ entry.status }}</span> {{ entry.event }}</p>
+          {% if entry.note %}<p class="plain history-note">{{ entry.note }}</p>{% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <section class="panel" aria-labelledby="update-heading">
+    <h2 id="update-heading">Update this job</h2>
+    {% if job.status == "Completed" %}
+      <p>This job is <strong>Completed</strong>. No further updates are needed. The completion note and full history are shown on this page.</p>
+    {% else %}
+      {% if job.status == "New" %}
+      <form method="post" action="{{ url_for('start_job', job_id=job.id) }}" class="action-block">
+        <h3>Start work</h3>
+        <p class="hint">Changes the status from New to In Progress.</p>
+        {% if errors.start %}<p class="error-message" id="start-error">{{ errors.start }}</p>{% endif %}
+        <button type="submit" class="button" id="start-button">Move to In Progress</button>
+      </form>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('add_progress', job_id=job.id) }}" class="action-block" novalidate>
+        <h3>Add a progress note</h3>
+        <div class="field {% if errors.note %}field-error{% endif %}">
+          <label for="note">Progress note</label>
+          <p class="hint" id="note-hint">{% if job.status == "New" %}Saving a note also moves the job to In Progress. {% endif %}Earlier notes are kept in the history.</p>
+          {% if errors.note %}<p class="error-message" id="note-error"><span class="visually-hidden">Error:</span> {{ errors.note }}</p>{% endif %}
+          <textarea id="note" name="note" rows="3" maxlength="{{ max_text }}" required
+            aria-describedby="note-hint{% if errors.note %} note-error{% endif %}"
+            {% if errors.note %}aria-invalid="true"{% endif %}>{{ values.note }}</textarea>
+        </div>
+        <button type="submit" class="button">Save progress note</button>
+      </form>
+
+      <form method="post" action="{{ url_for('complete_job', job_id=job.id) }}" class="action-block" novalidate>
+        <h3>Mark as Completed</h3>
+        <div class="field {% if errors.completion_note %}field-error{% endif %}">
+          <label for="completion_note">Completion note (required)</label>
+          <p class="hint" id="completion-hint">Explain what was done to fix the problem.</p>
+          {% if errors.completion_note %}<p class="error-message" id="completion_note-error"><span class="visually-hidden">Error:</span> {{ errors.completion_note }}</p>{% endif %}
+          <textarea id="completion_note" name="completion_note" rows="3" maxlength="{{ max_text }}" required
+            aria-describedby="completion-hint{% if errors.completion_note %} completion_note-error{% endif %}"
+            {% if errors.completion_note %}aria-invalid="true"{% endif %}>{{ values.completion_note }}</textarea>
+        </div>
+        <button type="submit" class="button button-complete">Mark as Completed</button>
+      </form>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

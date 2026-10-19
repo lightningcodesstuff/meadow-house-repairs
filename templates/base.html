@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Meadow House Repairs{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="{{ url_for('index') }}">Meadow House Repairs</a>
+      <p class="tagline">Report repairs, track progress and see what was done.</p>
+    </div>
+  </header>
+  <main id="main" class="container" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <div class="container">Fictional demo data only. Jobs are saved on this server in <code>data/jobs.json</code>.</div>
+  </footer>
+  <script>
+    // Move keyboard / screen-reader focus to the error summary or saved-result banner.
+    (function () {
+      var el = document.querySelector('[data-focus]');
+      if (el) { el.focus(); }
+    })();
+  </script>
+</body>
+</html>

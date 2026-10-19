@@ -1,0 +1,24 @@
+{% macro priority_badge(priority) -%}
+  {% if priority == "Urgent" %}
+    <span class="badge priority-urgent"><span aria-hidden="true">! </span>Urgent priority</span>
+  {% else %}
+    <span class="badge priority-normal">Normal priority</span>
+  {% endif %}
+{%- endmacro %}
+
+{% macro status_badge(status) -%}
+  <span class="badge {{ status|status_class }}">Status: {{ status }}</span>
+{%- endmacro %}
+
+{% macro error_summary(errors, labels) -%}
+  {% if errors %}
+    <div class="error-summary" role="alert" tabindex="-1" data-focus aria-labelledby="error-summary-title">
+      <h2 id="error-summary-title">There is a problem – nothing was saved</h2>
+      <ul>
+        {% for field, message in errors.items() %}
+          <li><a href="#{{ labels.get(field, (field, ''))[0] }}">{{ message }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+{%- endmacro %}
